@@ -35,7 +35,8 @@
     "postcss": "^5.0.4"
   },
   "devDependencies": {
-    "eslint": "0.18.0",
-    "tape": "4.0.0"
+    "eslint": "^0.18.0",
+    "postcss": "^5.2.16",
+    "tape": "^4.0.0"
   }
 }
