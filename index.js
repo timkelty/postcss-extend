@@ -3,13 +3,13 @@
 var postcss = require('postcss');
 // /*DEBUG*/var appendout = require('fs').appendFileSync;
 
-module.exports = postcss.plugin('postcss-extend', function extend() {
+module.exports = postcss.plugin('postcss-extend', function extend(options) {
+  options = options || {};
 
   return function(css, result) {
     var definingAtRules = ['define-placeholder', 'define-extend', 'extend-define'];
     var extendingAtRules = ['extend'];
     var recurseStack = [];
-    var isAntiPatternCSS = false;
 
     // /*DEBUG*/appendout('./test/debugout.txt', '\n----------------------------------------');
 
@@ -235,7 +235,7 @@ module.exports = postcss.plugin('postcss-extend', function extend() {
           }
         }
       } //end of if hasMediaAncestor
-      if (!couldExtend) {
+      if (!couldExtend && !options.silenceUndefinedWarning) {
         result.warn('\'' + atRule.params + '\', has not been defined, so it cannot be extended', { node: atRule });
         // /*DEBUG*/appendout('./test/debugout.txt', '\n\'' + atRule.params + '\' has not been defined!!!');
       }
@@ -358,20 +358,6 @@ module.exports = postcss.plugin('postcss-extend', function extend() {
       var recursableRule = findUnresolvedExtendChild(targetNode);
       var isTopOfRecurse = false;
       if (recurseStack.length === 0) { isTopOfRecurse = true; }
-      if (!isAntiPatternCSS && css.index(atRule.parent) < css.index(targetNode)) {
-        // Throw this error only once, and only if it's an antipattern
-        // Make sure index could be obtained for atRule parent
-        if (css.index(atRule.parent) !== -1) {
-          // /*DEBUG*/appendout('./test/debugout.txt', '\nANTIPATTERN CSS detected parent at: ' + css.index(atRule.parent) + ' target at: ' + css.index(targetNode) + ' parent :\n' + atRule.parent);
-          result.warn('@extend is being used in an anti-pattern (extending things not yet defined). This is your first and final warning', {node: atRule});
-          isAntiPatternCSS = true;
-        // If index couldn't be obtained on atRule, check up the chain a step
-        } else if (css.index(atRule.parent.parent) !== -1 && css.index(atRule.parent.parent) < css.index(targetNode)) {
-          // /*DEBUG*/appendout('./test/debugout.txt', '\nANTIPATTERN CSS detected parent\'s parent at: ' + css.index(atRule.parent.parent) + ' target at: ' + css.index(targetNode) + ' parent :\n' + atRule.parent);
-          result.warn('@extend is being used in an anti-pattern (extending things not yet defined). This is your first and final warning', {node: atRule});
-          isAntiPatternCSS = true;
-        }
-      }
       if (recursableRule.bool) {
         recurseStack.push(atRule.params);
         while (recursableRule.bool) {
